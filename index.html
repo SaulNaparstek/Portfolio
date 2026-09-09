@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saul Naparstek</title>
+<style>
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #ffffff;
+    color: #111111;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  }
+
+  a { color: inherit; text-decoration: none; }
+
+  :focus-visible {
+    outline: 1px solid #111111;
+    outline-offset: 3px;
+  }
+
+  /* ---- header ---- */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 22px 32px;
+    position: relative;
+  }
+
+  .site-name {
+    font-size: 24px;
+    font-weight: 700;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: inherit;
+    color: #111111;
+    padding: 0;
+  }
+
+  .site-name:hover { color: #555555; }
+
+  /* ---- dropdown menu ---- */
+  .menu {
+    position: relative;
+  }
+
+  .menu-button {
+    font-family: inherit;
+    font-size: 18px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #111111;
+    padding: 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .menu-button .caret {
+    font-size: 10px;
+    transition: transform 0.15s ease;
+  }
+
+  .menu-button[aria-expanded="true"] .caret {
+    transform: rotate(180deg);
+  }
+
+  .menu-list {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #e2e2e2;
+    min-width: 140px;
+    display: none;
+    flex-direction: column;
+    z-index: 10;
+  }
+
+  .menu-list.open { display: flex; }
+
+  .menu-list button {
+    font-family: inherit;
+    font-size: 15px;
+    padding: 10px 14px;
+    color: #333333;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .menu-list button:hover {
+    background: #f4f4f4;
+    color: #111111;
+  }
+
+  /* ---- grid views ---- */
+  main {
+    padding: 40px 32px 100px;
+  }
+
+  .view { display: none; position: relative; }
+  .view.active { display: block; }
+
+  .back-link {
+    position: absolute;
+    top: -34px;
+    left: 0;
+    display: inline-block;
+    font-family: inherit;
+    font-size: 12px;
+    color: #555555;
+    margin: 0;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  .back-link:hover { color: #111111; }
+
+  .tile-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 28px;
+  }
+
+  .carousel {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  margin-bottom: 8px;
+}
+
+.carousel-track {
+  display: flex;
+  gap: 16px;
+  padding-bottom: 10px; /* room so the scrollbar doesn't sit on the images */
+}
+
+.carousel-item {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+}
+
+.carousel-item img {
+  display: block;
+  height: 510px;
+  width: auto;
+  border: 1px solid #dcdcdc;
+}
+
+.carousel-placeholder {
+  height: 420px;
+  width: 320px;
+  background-color: #ededed;
+  border: 1px solid #dcdcdc;
+}
+
+@media (max-width: 700px) {
+  .carousel-item img,
+  .carousel-placeholder {
+    height: 380px;
+  }
+  .carousel-placeholder {
+    width: 280px;
+  }
+}
+
+  #subGrid,
+  #subGrid .tile-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  #subGrid.has-sections {
+    display: block;
+  }
+
+  .sub-section-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 18px;
+  }
+
+  .sub-section-text {
+    font-size: 15px;
+    line-height: 1.6;
+    color: #555555;
+    margin: 0 0 24px;
+    grid-column: 1 / -1;
+  }
+
+  .sub-section-title:not(:first-child) {
+    margin-top: 52px;
+  }
+
+  .tile {
+    display: block;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    text-align: left;
+    font-family: inherit;
+  }
+
+  .tile-thumb {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background-color: #ededed;
+    background-size: cover;
+    background-position: center;
+    border: 1px solid #dcdcdc;
+    transition: opacity 0.15s ease;
+  }
+
+.tile-thumb--no-border {
+  border: none;
+}
+
+  .tile-thumb-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid #dcdcdc;
+    transition: opacity 0.15s ease;
+  }
+
+  .tile:hover .tile-thumb,
+  .tile:hover .tile-thumb-img {
+    opacity: 0.85;
+  }
+
+  .tile-caption {
+    margin-top: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #555555;
+    text-align: center;
+  }
+
+  @media (max-width: 560px) {
+    .tile-grid { grid-template-columns: 1fr; }
+    #subGrid,
+    #subGrid .tile-grid { grid-template-columns: 1fr; }
+    header { flex-wrap: wrap; gap: 14px; }
+  }
+
+  /* ---- about / contact panels ---- */
+  .info-panel {
+    max-width: 600px;
+  }
+
+  .info-panel p {
+    font-size: 14px;
+    color: #333333;
+    margin: 0 0 14px;
+  }
+
+  .info-panel a.email {
+    color: #111111;
+    border-bottom: 1px solid #cccccc;
+  }
+
+  footer {
+    padding: 26px 32px 40px;
+    border-top: 1px solid #e2e2e2;
+    font-size: 11px;
+    color: #999999;
+    display: flex;
+    justify-content: space-between;
+  }
+
+.about-layout {
+  display: flex;
+  gap: 48px;
+  align-items: flex-start;
+}
+
+.about-photo {
+  width: 600px;
+  flex-shrink: 0;
+  margin-left: 50px
+}
+
+@media (max-width: 700px) {
+  .about-layout {
+    flex-direction: column;
+  }
+  .about-photo {
+    width: 100%;
+    max-width: 280px;
+  }
+}
+
+.about-photo img {
+  width: 100%;
+  display: block;
+  border: 1px solid #dcdcdc;
+}
+
+.site-name {
+  font-size: 24px;
+  font-weight: 700;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: inherit;
+  color: #111111;
+  padding: 0;
+}
+
+.site-name:hover { color: #555555; }
+
+</style>
+</head>
+<body>
+
+<header>
+<button class="site-name" id="homeButton" type="button">Saul Naparstek</button>
+</button>
+
+  <div class="menu">
+    <button class="menu-button" id="menuButton" type="button" aria-haspopup="true" aria-expanded="false">
+      Menu <span class="caret">&#9660;</span>
+    </button>
+    <div class="menu-list" id="menuList">
+      <button type="button" data-view="about">About</button>
+      <button type="button" data-view="contact">Contact</button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- top-level grid: 6 tiles, 2 columns x 3 rows -->
+  <section class="view" id="view-home">
+    <div class="tile-grid" id="homeGrid"></div>
+  </section>
+
+  <!-- sub grid: shown after clicking a tile -->
+  <section class="view" id="view-sub">
+    <button class="back-link" type="button" data-view="home">&larr; Back</button>
+    <div class="tile-grid" id="subGrid"></div>
+  </section>
+
+  <!-- about panel -->
+  <section class="view" id="view-about">
+    <button class="back-link" type="button" data-view="home">&larr; Back</button>
+    <div class="about-layout">
+    <div class="info-panel">
+      <p>I'm Saul, a designer from Brooklyn, New York. For as long as I can remember, I feel most like myself when I'm making something with my hands. When I discovered the design thinking process, I realized that my love for creation could be used as an instrument to help others. Now at Northwestern's McCormick School of Engineering, I'm looking to turn my ideas into more vibrant realities.</p>
+    </div>
+     <div class="about-photo">
+      <img src="images/about-photo-1.png" alt="Saul Naparstek">
+    
+    </div>
+  </div>
+  </section>
+
+  <!-- contact panel -->
+  <section class="view" id="view-contact">
+    <button class="back-link" type="button" data-view="home">&larr; Back</button>
+    <div class="info-panel">
+      <p>For inquiries: <a class="email" href="mailto:saul@naparstek.com">saul@naparstek.com</a></p>
+      <p>Instagram: saul_naparstek, stak.archives.</p>
+      <p>Linkedin: https://www.linkedin.com/in/saulnaparstek/</p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <span>&copy; 2026 Saul Naparstek</span>
+</footer>
+
+<script>
+  // ---- data: 6 top-level tiles, each with its own set of sub-tiles ----
+
+  const SNEAKER_SUB_URIS = ["images/sneaker-design/sub-1.jpg", "images/sneaker-design/sub-8.jpg", "images/sneaker-design/sub-3.jpg", "images/sneaker-design/sub-4.jpg", "images/sneaker-design/sub-5.jpg", "images/sneaker-design/sub-6.jpg", "images/sneaker-design/sub-7.jpg", "images/sneaker-design/sub-2.jpg", "images/sneaker-design/sub-9.jpg", "images/sneaker-design/sub-10.jpg", "images/sneaker-design/sub-11.jpg", "images/sneaker-design/sub-12.jpg", "images/sneaker-design/sub-13.jpg", "images/sneaker-design/sub-14.jpg", "images/sneaker-design/sub-15.jpg", "images/sneaker-design/sub-16.jpg", "images/sneaker-design/sub-17.jpg", "images/sneaker-design/sub-18.jpg", "images/sneaker-design/sub-19.jpg"];
+
+  const MOOSE_SUB_URIS = ["images/drowning-moose/sub-1.jpg", "images/drowning-moose/sub-2.jpg", "images/drowning-moose/sub-3.jpg", "images/drowning-moose/sub-4.jpg", "images/drowning-moose/sub-5.jpg", "images/drowning-moose/sub-6.jpg", "images/drowning-moose/sub-7.jpg", "images/drowning-moose/sub-8.jpg", "images/drowning-moose/sub-9.jpg", "images/drowning-moose/sub-10.jpg", "images/drowning-moose/sub-11.jpg", "images/drowning-moose/sub-12.jpg", "images/drowning-moose/sub-13.jpg", "images/drowning-moose/sub-14.jpg", "images/drowning-moose/sub-15.jpg", "images/drowning-moose/sub-16.jpg", "images/drowning-moose/sub-17.jpg", "images/drowning-moose/sub-18.jpg", "images/drowning-moose/sub-19.jpg", "images/drowning-moose/sub-20.jpg", "images/drowning-moose/sub-21.jpg", "images/drowning-moose/sub-22.jpg", "images/drowning-moose/sub-23.jpg", "images/drowning-moose/sub-24.jpg", "images/drowning-moose/sub-25.jpg", "images/drowning-moose/sub-26.jpg", "images/drowning-moose/sub-27.jpg", "images/drowning-moose/sub-28.jpg", "images/drowning-moose/sub-29.jpg", "images/drowning-moose/sub-30.jpg"];
+
+  const STAK_SUB_URIS = ["images/stak/sub-6.jpg", "images/stak/sub-2.jpg", "images/stak/sub-3.jpg", "images/stak/sub-4.jpg", "images/stak/sub-5.jpg", "images/stak/sub-1.jpg", "images/stak/sub-7.jpg", "images/stak/sub-9.png", "images/stak/stakcover.png"];
+
+  const DIGITAL_SUB_URIS = ["images/digital-collage/okeefe.jpg", "images/digital-collage/vission.jpg", "images/digital-collage/FACEshit.png", "images/digital-collage/camel.jpg", "images/digital-collage/mets.png", "images/digital-collage/lacoon.jpg", "images/digital-collage/crashtest.jpg", "images/digital-collage/horseshite.png"]
+
+  const LINEN_SUB_URIS = ["images/linen/linen1.png", "images/linen/linen2.png", "images/linen/linen3.png", "images/linen/linen4.png", "images/linen/linen5.png", "images/linen/linen6.png", "images/linen/linen7.png", "images/linen/linen8.png"]
+
+  const WINDUP_SUB_URIS = ["images/windup-toy/windup1.png", "images/windup-toy/windup2.png", "images/windup-toy/windup3.png", "images/windup-toy/windup4.png", "images/windup-toy/windup5.png", "images/windup-toy/windup6.png", "images/windup-toy/windup8.png", "images/windup-toy/windup7.png"]
+
+  const NYU_SUB_URIS = ["images/nyu/nyu1.png", "images/nyu/nyu2.png", "images/nyu/nyu3.png", "images/nyu/nyu4.png", "images/nyu/nyu5.png", "images/nyu/nyu6.png", "images/nyu/nyu7.png", "images/nyu/nyu8.png"]
+
+  const DRAWING_SUB_URIS = ["images/drawings/drawing2.png", "images/drawings/drawing4.png", "images/drawings/drawing3.png", "images/drawings/drawing1.png", "images/drawings/drawing5.png"]
+
+  const PLACEHOLDER_IMG = "images/placeholder.jpg";
+
+  const PROJECTS = [
+    { id: 1, title: "Product Design",   image: "images/product-design.jpg", sections: [
+        { title: "Windup Toy", count: 8, images: WINDUP_SUB_URIS, 
+          text: "In my junior year of high school I started an independent study with my design teacher. After working at a bike shop all summer, I was interested in gear mechanics and how they work. We didn't have the resources to build a bike, so I began designing a machine with similar properties: the windup toy. I wanted my windup toy to function as a teaching device for other students interested in gears, so I turned the structure inside-out, allowing the user to see what was happening while it was running. As it was wound, the user could see the bands tightening and the gears turning. Using ball-bearings, basswood, Adobe Illustrator, a 3D printer, and a laser cutter, I went through numerous mockups before reaching a third prototype. All the while, the bike served as a guide for my design: I tried to make it fun to use, put an emphasis on visual appeal, and focused on the user experience. Below is a look into the entire design process, with the finished product at the end."
+        },
+        { title: "NYU Medication Adherence Mock Solutions", count: 8, images: NYU_SUB_URIS,
+          text: "In 2024, I participated in a summer program at the NYU Tandon School of Engineering called Design, Invent, and Innovate. My team was tasked with finding a potential solution to elderly people not taking their pills as prescribed (medication non-adherence). Throughout the two week program we were able to conduct a rapid design process: we asked elders in our own lives how they handle their prescriptions, narrowed down our problem statement, generated three potential solutions and then created a presentation explaining our process. We weren't able to create a final product given the expedited time line, but it still was an incredible learning experience. This was my first design project with defined time and budget constraints, forcing me to adapt my processes and challenge myself to work faster without sacrificing quality. We settled on two final ideas: a pill watch which keeps medication on hand and gives friendly reminders to take it, and a bedroom door handle containing pills which dispense straight into your hand in the morning and night."
+         },
+        { title: "Linen Cart Enclosure", count: 8, images: LINEN_SUB_URIS,
+          text: "In Northwestern Engineering's signature freshman class, Design Thinking and Communication, students apply a human-centered design process to a real world problem. In this course my group was partnered with the Shirley Ryan Ability Labs, a rehab center in Chicago whose nurses were forgetting to close the velcro straps on their linen carts. This small, seemingly mundane issue actually causes potential health code violations as the linens need to be fully secured when not in use. Throughout the 10 week course my group was able to interview stakeholders / users, prototype mockups, test and iterate those solutions, before ultimately presenting our final design at the DTC expo."
+         }
+      ] },
+    { id: 2, title: "Stak",             count: 9,  image: "images/stak/stakcover.png", subImages: STAK_SUB_URIS},
+    { id: 3, title: "Digital Collage",  count: 8,  image: "images/digital-collage/FACEshit.png", subImages: DIGITAL_SUB_URIS },
+    { id: 4, title: "Drawing",          count: 4,  image: "images/drawings/drawing6.png", subImages: DRAWING_SUB_URIS },
+    { id: 5, title: "Sneaker Design",   count: 19, image: "images/sneaker-design.jpg", subImages: SNEAKER_SUB_URIS, text: "As a basketball player, I've always been obsessed with my footwear. What shoes will maximize my performance? What shoes will make me look the best? Why? During quarantine, I fell in love with the work of Tinker Hatfield, the man who designed Michael Jordan's signature sneaker line and many other famous silhouettes. Inspired by his work and the sketches of other designers like Virgil Abloh and Benjamin Nethongkome, I began creating my own shoes." },
+    { id: 6, title: "Drowning Moose NFT",   count: 30, image: "images/drowning-moose.jpg", subImages: MOOSE_SUB_URIS, text: "In my freshman year of high school I became interested in the world of Blockchain. I was curious as to how it all worked and thought the best way to understand would be creating my own NFT. Inspired by Bored Ape Yacht Club, I began working on my Drowning Moose collection. The collection, listed on opensea.io, consists of 33 Moose, each drowning in their own unique style. (https://opensea.io/collection/drowning-moose-collection)"}
+  ];
+
+  const homeGrid = document.getElementById('homeGrid');
+  const subGrid = document.getElementById('subGrid');
+
+  // ---- view switching (pure JS state — no links, no URL changes) ----
+  const views = {
+    home: document.getElementById('view-home'),
+    sub: document.getElementById('view-sub'),
+    about: document.getElementById('view-about'),
+    contact: document.getElementById('view-contact')
+  };
+
+  function showView(name) {
+    Object.values(views).forEach(v => v.classList.remove('active'));
+    views[name].classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  function buildTileGrid(container, prefix, count, images) {
+  for (let i = 1; i <= count; i++) {
+    const tile = document.createElement('div');
+    tile.className = 'tile';
+
+    let thumb;
+    if (images && images[i - 1]) {
+      thumb = document.createElement('img');
+      thumb.className = 'tile-thumb-img';
+      thumb.src = images[i - 1];
+      thumb.alt = `${prefix} — Image ${i}`;
+      thumb.loading = 'lazy';
+    } else {
+      thumb = document.createElement('div');
+      thumb.className = 'tile-thumb';
+    }
+
+    tile.appendChild(thumb);
+    container.appendChild(tile);
+  }
+}
+
+function buildCarousel(prefix, images, count) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'carousel';
+
+  const track = document.createElement('div');
+  track.className = 'carousel-track';
+
+  const total = images ? images.length : (count || 0);
+
+  for (let i = 1; i <= total; i++) {
+    const item = document.createElement('div');
+    item.className = 'carousel-item';
+
+    if (images && images[i - 1]) {
+      const img = document.createElement('img');
+      img.src = images[i - 1];
+      img.alt = `${prefix} — Image ${i}`;
+      img.loading = 'lazy';
+      item.appendChild(img);
+    } else {
+      const placeholder = document.createElement('div');
+      placeholder.className = 'carousel-placeholder';
+      item.appendChild(placeholder);
+    }
+
+    track.appendChild(item);
+  }
+
+  wrapper.appendChild(track);
+  return wrapper;
+}
+
+  function openProject(project) {
+  subGrid.innerHTML = '';
+
+  if (project.sections) {
+    subGrid.classList.add('has-sections');
+    project.sections.forEach(section => {
+      const heading = document.createElement('div');
+      heading.className = 'sub-section-title';
+      heading.textContent = section.title;
+      subGrid.appendChild(heading);
+
+      if (section.text) {
+    const text = document.createElement('p');
+    text.className = 'sub-section-text';
+    text.textContent = section.text;
+    subGrid.appendChild(text);
+  }
+
+      const carousel = buildCarousel(section.title, section.images, section.count);
+      subGrid.appendChild(carousel);
+    });
+  } else {
+    subGrid.classList.remove('has-sections');
+
+ if (project.text) {
+    const text = document.createElement('p');
+    text.className = 'sub-section-text';
+    text.textContent = project.text;
+    subGrid.appendChild(text);
+  }
+
+    buildTileGrid(subGrid, project.title, project.count, project.subImages);
+  }
+
+  showView('sub');
+}
+
+  // build the home grid once
+  PROJECTS.forEach(p => {
+    const tile = document.createElement('div');
+    tile.className = 'tile';
+    tile.setAttribute('role', 'button');
+    tile.setAttribute('tabindex', '0');
+
+    const thumb = document.createElement('div');
+    thumb.className = 'tile-thumb';
+    if (p.title === "Drawing") {
+  thumb.classList.add('tile-thumb--no-border');
+}
+    if (p.image) thumb.style.backgroundImage = `url("${p.image}")`;
+    if (p.position) thumb.style.backgroundPosition = p.position;
+
+    const caption = document.createElement('div');
+    caption.className = 'tile-caption';
+    caption.textContent = p.title;
+
+    tile.appendChild(thumb);
+    tile.appendChild(caption);
+
+    tile.addEventListener('click', () => openProject(p));
+    tile.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openProject(p);
+      }
+    });
+
+    homeGrid.appendChild(tile);
+  });
+
+  // any element with data-view="home|about|contact" navigates in place
+  document.querySelectorAll('[data-view]').forEach(el => {
+    el.addEventListener('click', () => showView(el.dataset.view));
+  });
+
+  document.getElementById('homeButton').addEventListener('click', () => showView('home'));
+
+  showView('home');
+
+  // ---- dropdown menu ----
+  const menuButton = document.getElementById('menuButton');
+  const menuList = document.getElementById('menuList');
+
+  menuButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const open = menuList.classList.toggle('open');
+    menuButton.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+
+  menuList.addEventListener('click', () => {
+    menuList.classList.remove('open');
+    menuButton.setAttribute('aria-expanded', 'false');
+  });
+
+  document.addEventListener('click', () => {
+    menuList.classList.remove('open');
+    menuButton.setAttribute('aria-expanded', 'false');
+  });
+</script>
+
+</body>
+</html>
